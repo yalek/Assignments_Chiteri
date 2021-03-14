@@ -1,0 +1,162 @@
+---
+title: "R_assign"
+author: "chiteri"
+date: "3/13/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+##set working directory (uses relative path)
+```{r}
+setwd('.') #uses current directory with markdown file as working directory
+```
+
+
+```{r, include=FALSE}
+# install tidyverse if not installed
+#will not be included in markdown
+
+if(!require(tidyverse))
+  install.packages("tidyverse");
+suppressPackageStartupMessages(library(tidyverse))
+```
+
+#Part1 Data inspection
+
+```{r}
+#Read the files
+genotypes <- read.table("./fang_et_al_genotypes.txt",header = TRUE, sep = "\t")
+snp_position <- read.table("./snp_position.txt", header = TRUE, sep = "\t")
+
+#Inspecting the genotypes file
+dim(genotypes) #No of rows & columns
+class(genotypes)
+#str(genotypes) # describes the variables data types. Since we have many variables we don't output them
+
+file.info(list.files(path = ".", pattern=".txt", full.names = TRUE))
+#colnames(genotypes) # will print all the 986 variables
+
+##Snp_position
+dim(snp_position) #No of rows & columns
+class(snp_position)
+str(snp_position) # describes the variables data types
+
+#colnames(snp_position)
+
+```
+
+#Filter files for maize, teosinte
+
+```{r}
+#filter maize records
+maize <- filter(genotypes, Group == 'ZMMIL' | Group =='ZMMLR' | Group == 'ZMMMR')
+
+#filter teosinte records
+teosinte <- filter(genotypes, Group == 'ZMPBA' | Group =='ZMPIL' | Group == 'ZMPJA')
+```
+
+#Transpose the data for maize
+```{r}
+
+#maize
+maize_transposed <- t(maize) # transpose
+colnames(maize_transposed) <- maize[,1] # assign column names using the first column before transposing
+
+maize_transposed <- maize_transposed[4:nrow(maize_transposed),]#remove first 3 rows
+
+#rename the rownames column to SNP_ID
+maize_transposed <- dplyr::as_data_frame(maize_transposed, rownames = "SNP_ID")
+
+#join the snp_position and transposed maize genotypes
+
+maize_data <- merge(snp_position, maize_transposed, by = "SNP_ID")
+
+#reorganize the columns
+maize_data <- select(maize_data, SNP_ID, Chromosome, Position, everything())
+
+```
+#Transpose the data for teosinte
+```{r}
+#teosinte
+teosinte_transposed <- t(teosinte) #transpose 
+
+colnames(teosinte_transposed) <- teosinte[,1] #rename the variables
+
+teosinte_transposed <- teosinte_transposed[4:nrow(maize_transposed),] #exclude first 3 rows
+
+teosinte_transposed <- dplyr::as_data_frame(teosinte_transposed, rownames = "SNP_ID") #rename rownames
+
+#join the snp_position and transposed teosinte genotypes
+
+teosinte_data <- merge(snp_position, teosinte_transposed, by = "SNP_ID")
+
+#reorganize the columns
+teosinte_data <- select(teosinte_data, SNP_ID, Chromosome, Position, everything())
+```
+
+#Data processing
+
+#maize output 
+```{r}
+#Checks if directory exists before it creates it
+if(!dir.exists("maize_results")){dir.create("./maize_results")}
+```
+
+
+```{r}
+#Question (a)
+#create a dataframe without unknown & multiple in chromosome column
+maize_chr <- filter(maize_data, Chromosome != "unknown" & Chromosome != "multiple")
+
+#create the required files per chromosome. Position in ascending order
+for (i in 1:length(unique(maize_chr$Chromosome))){
+  chrm <-  maize_chr %>% filter(Chromosome == i) %>% arrange(Position)
+  write.table(chrm, file = paste("./maize_results/maize_a",i, sep="_"))
+}
+
+
+# Question (b)
+#find "?" and replace "-", arrange Position in descending order
+chr1_b <- as_tibble(lapply(maize_data, gsub, pattern="?", replacement="-", fixed=TRUE))
+
+maize_chr_b <- filter(chr1_b, Chromosome != 'unknown' & Chromosome != 'multiple')
+
+for (i in 1:length(unique(maize_chr_b$Chromosome))){
+  chrm_b <-  maize_chr_b %>% filter(Chromosome == i) %>% arrange(desc(Position))
+  write.table(chrm_b, file = paste("./maize_results/maize_b",i, sep="_"))
+}
+```
+
+#Teosinte output
+```{r,echo=FALSE }
+if(!dir.exists("teosinte_results")){dir.create("./teosinte_results")}
+```
+```{r}
+#Question(a)
+#exclude unknown & multiple
+teosinte_chr <- filter(teosinte_data, Chromosome != 'unknown' & Chromosome != 'multiple')
+
+#create the required files, Position in ascending order
+for (i in 1:length(unique(teosinte_chr$Chromosome))){
+  chrm <-  teosinte_chr %>% filter(Chromosome == i) %>% arrange(Position)
+  write.table(chrm, file = paste("./teosinte_results/teo_a",i, sep="_"))
+}
+```
+```{r}
+#Question(b)
+#find "?" and replace with "-"
+teosinte_b <- as_tibble(lapply(teosinte_data, gsub, pattern="?", replacement="-", fixed=TRUE))
+
+teo_chr_b <- filter(teosinte_b, Chromosome != 'unknown' & Chromosome != 'multiple')
+
+#create required files with Position in descending order
+for (i in 1:length(unique(teo_chr_b$Chromosome))){
+  chrm_b <-  teo_chr_b %>% filter(Chromosome == i) %>% arrange(desc(Position))
+  write.table(chrm_b, file = paste("./teosinte_results/teo_b",i, sep="_"))
+}
+```
+
+
+
