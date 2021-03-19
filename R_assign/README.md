@@ -2,7 +2,7 @@
 
 1. maize_results/ - contains results from maize data processing
 2. teosinte_results/ - contains results from teosinte data processing
-3. visualize/ - contains figures
+3. visualize/ - contains figures for maize and teosinte
 4. fang_et_al_genotypes.txt - a file containing genotypes
 5. snp_position - a file containing snp positions
 6. R_assign.rmd - R markdown script for processing

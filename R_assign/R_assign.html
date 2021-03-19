@@ -504,22 +504,111 @@ for (i in 1:length(unique(teo_chr_b$Chromosome))){
   write.table(chrm_b, file = paste(&quot;./teosinte_results/teo_b&quot;,i, sep=&quot;_&quot;))
 }</code></pre>
 <p>#PartII Visualize</p>
-<pre class="r"><code>if(!dir.exists(&quot;visualize&quot;)){dir.create(&quot;./visualize&quot;)}
+<pre class="r"><code>if(!dir.exists(&quot;visualize&quot;)){dir.create(&quot;./visualize&quot;)}</code></pre>
+<p>#output for maize figs</p>
+<pre class="r"><code>if(!dir.exists(&quot;visualize/maize&quot;)){dir.create(&quot;./visualize/maize&quot;)}</code></pre>
+<p>##Maize graphs</p>
+<pre class="r"><code>##Visualize for each crop
+#Maize
 
-#visualizing the snp_position
-snp1 &lt;- filter(snp_position, Chromosome != &#39;unknown&#39; &amp; Chromosome != &#39;multiple&#39;) %&gt;% arrange(Chromosome) %&gt;% select(SNP_ID, Chromosome)
+#make chromosome a factor
 
-#ordering the Chromosome
-snp1$Chromosome = factor(snp1$Chromosome, levels = c(1,2,3,4,5,6,7,8,9,10))
+maize_chr$Chromosome &lt;- factor(maize_chr$Chromosome, levels = c(1,2,3,4,5,6,7,8,9,10))
 
-#ggplot object p
-p &lt;- ggplot(data=snp1) + geom_bar(mapping=aes(x=Chromosome), fill = &#39;blue&#39;, alpha = 0.5) + labs(title=&quot;Total SNPs per Chromosome&quot;, y=&quot;Total SNPs&quot;) + theme(plot.title = element_text(hjust = 0.5))
+#bar_graph
+m1 &lt;- ggplot(maize_chr, mapping=aes(x=Chromosome, fill=Chromosome)) + geom_bar() + labs(title=&quot;Maize: Total SNPs per Chromosome&quot;, y=&quot;Total SNPs&quot;) + theme(plot.title = element_text(hjust = 0.5))
 
 #save
-ggsave(filename = &quot;./visualize/snps_per_chromosome.png&quot;)</code></pre>
+ggsave(filename = &quot;./visualize/maize/maize_snps_per_chromosome.png&quot;)</code></pre>
 <pre><code>## Saving 7 x 5 in image</code></pre>
-<pre class="r"><code>#Snps distribution
-#ggplot(data=snp1) + geom_point(mapping=aes(x=Chromosome, y= SNP_ID))</code></pre>
+<pre class="r"><code>#Snp distribution
+m2 &lt;- ggplot(maize_chr, mapping=aes(x=Chromosome, color=Chromosome)) + geom_density() + labs(title=&quot;Maize: Distribution of total SNPs per Chromosome&quot;) + theme(plot.title = element_text(hjust = 0.5))
+
+#save
+ggsave(filename = &quot;./visualize/maize/maize_sns_distribution_per_chromosome.png&quot;)</code></pre>
+<pre><code>## Saving 7 x 5 in image</code></pre>
+<pre class="r"><code>m3 &lt;- ggplot(data=maize_chr) + geom_point(mapping=aes(x=Chromosome, y= SNP_ID, color=Chromosome)) + theme(axis.text.y = element_blank())+ labs(title=&quot;Maize: Distribution of SNPs per Chromosome&quot;)+ theme(plot.title = element_text(hjust = 0.5)) + ylab(&#39;SNP&#39;)
+
+#save
+ggsave(filename = &quot;./visualize/maize/maize_sns_distribution_per_chromosome2.png&quot;)</code></pre>
+<pre><code>## Saving 7 x 5 in image</code></pre>
+<pre class="r"><code>##Missing data&amp; heterozygosity
+maize_y &lt;- mutate(maize_chr, status = (ZDP_0752a == &#39;A/A&#39; | ZDP_0752a == &#39;C/C&#39; | ZDP_0752a == &#39;G/G&#39;  | ZDP_0752a == &#39;T/T&#39;  ))
+
+m4 &lt;- ggplot(maize_y, mapping=aes(x=status, fill=Chromosome)) + geom_bar() + labs(title=&quot;Maize: Homozygosity|Heterozygosity Status&quot;) + theme(plot.title = element_text(hjust = 0.5))
+
+#save
+ggsave(filename = &quot;./visualize/maize/maize_homo_hetero.png&quot;)</code></pre>
+<pre><code>## Saving 7 x 5 in image</code></pre>
+<pre class="r"><code>m5 &lt;- ggplot(maize_y, mapping=aes(x=status, fill=Chromosome)) + geom_bar() + labs(title=&quot;Maize: Homozygosity|Heterozygosity Status&quot;) + theme(plot.title = element_text(hjust = 0.5)) + facet_grid(~Chromosome)
+#save
+ggsave(filename = &quot;./visualize/maize/maize_homo_hetero_all_chromosomes.png&quot;, width = 14, height = 14)
+
+#missing data
+
+maize_y &lt;- mutate(maize_chr, status = (ZDP_0752a == &#39;?/?&#39;))
+
+m6 &lt;- ggplot(maize_y, mapping=aes(x=status, fill=Chromosome )) + geom_bar() + labs(title=&quot;Maize: Missing data for ZDP_0752a&quot;) + theme(plot.title = element_text(hjust = 0.5))
+
+#save
+ggsave(filename = &quot;./visualize/maize/maize_missing.png&quot;)</code></pre>
+<pre><code>## Saving 7 x 5 in image</code></pre>
+<pre class="r"><code>m7 &lt;- ggplot(maize_y, mapping=aes(x=status, fill=Chromosome)) + geom_bar() + labs(title=&quot;Maize: Missing data for ZDP_0752a&quot;) + theme(plot.title = element_text(hjust = 0.5)) + facet_grid(~Chromosome) 
+
+#save
+ggsave(filename = &quot;./visualize/maize/maize_missing_all.png&quot;, width = 14, height = 14 )</code></pre>
+<p>##Teosinte_graphs</p>
+<p>#output for teosinte figs</p>
+<pre class="r"><code>if(!dir.exists(&quot;visualize/teosinte&quot;)){dir.create(&quot;./visualize/teosinte&quot;)}</code></pre>
+<pre class="r"><code>##Visualize for each crop
+#Maize
+
+#make chromosome a factor
+
+teosinte_chr$Chromosome &lt;- factor(teosinte_chr$Chromosome, levels = c(1,2,3,4,5,6,7,8,9,10))
+
+#bar_graph
+t1 &lt;- ggplot(teosinte_chr, mapping=aes(x=Chromosome, fill=Chromosome)) + geom_bar() + labs(title=&quot;Teosinte: Total SNPs per Chromosome&quot;, y=&quot;Total SNPs&quot;) + theme(plot.title = element_text(hjust = 0.5))
+
+#save
+ggsave(filename = &quot;./visualize/teosinte/teo_snps_per_chromosome.png&quot;)</code></pre>
+<pre><code>## Saving 7 x 5 in image</code></pre>
+<pre class="r"><code>#Snp distribution
+t2 &lt;- ggplot(teosinte_chr, mapping=aes(x=Chromosome, color=Chromosome)) + geom_density() + labs(title=&quot;Teosinte: Distribution of total SNPs per Chromosome&quot;) + theme(plot.title = element_text(hjust = 0.5))
+
+#save
+ggsave(filename = &quot;./visualize/teosinte/teo_sns_distribution_per_chromosome.png&quot;)</code></pre>
+<pre><code>## Saving 7 x 5 in image</code></pre>
+<pre class="r"><code>t3 &lt;- ggplot(data=teosinte_chr) + geom_point(mapping=aes(x=Chromosome, y= SNP_ID, color=Chromosome)) + theme(axis.text.y = element_blank())+ labs(title=&quot;Teosinte: Distribution of SNPs per Chromosome&quot;)+ theme(plot.title = element_text(hjust = 0.5)) + ylab(&#39;SNP&#39;)
+
+#save
+ggsave(filename = &quot;./visualize/teosinte/teo_sns_distribution_per_chromosome2.png&quot;)</code></pre>
+<pre><code>## Saving 7 x 5 in image</code></pre>
+<pre class="r"><code>##Missing data&amp; heterozygosity
+teo_y &lt;- mutate(teosinte_chr, status = (S0881 == &#39;A/A&#39; | S0881 == &#39;C/C&#39; | S0881 == &#39;G/G&#39;  | S0881 == &#39;T/T&#39;  ))
+
+t4 &lt;- ggplot(teo_y, mapping=aes(x=status, fill=Chromosome)) + geom_bar() + labs(title=&quot;Teosinte: Homozygosity|Heterozygosity Status&quot;) + theme(plot.title = element_text(hjust = 0.5))
+
+#save
+ggsave(filename = &quot;./visualize/teosinte/teo_homo_hetero.png&quot;)</code></pre>
+<pre><code>## Saving 7 x 5 in image</code></pre>
+<pre class="r"><code>t5 &lt;- ggplot(teo_y, mapping=aes(x=status, fill=Chromosome)) + geom_bar() + labs(title=&quot;Teosinte: Homozygosity|Heterozygosity Status&quot;) + theme(plot.title = element_text(hjust = 0.5)) + facet_grid(~Chromosome)
+#save
+ggsave(filename = &quot;./visualize/teosinte/teo_homo_hetero_all_chromosomes.png&quot;, width = 14, height = 14)
+
+#missing data
+
+teo_y &lt;- mutate(teosinte_chr, status = (S0881 == &#39;?/?&#39;))
+
+t6 &lt;- ggplot(teo_y, mapping=aes(x=status, fill=Chromosome )) + geom_bar() + labs(title=&quot;Teosinte: Missing data for S0881&quot;) + theme(plot.title = element_text(hjust = 0.5))
+
+#save
+ggsave(filename = &quot;./visualize/teosinte/teo_missing.png&quot;)</code></pre>
+<pre><code>## Saving 7 x 5 in image</code></pre>
+<pre class="r"><code>t7 &lt;- ggplot(teo_y, mapping=aes(x=status, fill=Chromosome)) + geom_bar() + labs(title=&quot;Teosinte: Missing data for S0881&quot;) + theme(plot.title = element_text(hjust = 0.5)) + facet_grid(~Chromosome) 
+
+#save
+ggsave(filename = &quot;./visualize/teosinte/teo_missing_all.png&quot;, width = 14, height = 14 )</code></pre>
 
 
 
