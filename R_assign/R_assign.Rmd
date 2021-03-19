@@ -9,13 +9,12 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+\#\#set working directory (uses relative path)
 
-##set working directory (uses relative path)
 ```{r}
 setwd('.') #uses current directory with markdown file as working directory
 
 ```
-
 
 ```{r, include=FALSE}
 # install tidyverse if not installed
@@ -26,7 +25,7 @@ if(!require(tidyverse))
 suppressPackageStartupMessages(library(tidyverse))
 ```
 
-#Part1 Data inspection
+\#Part1 Data inspection
 
 ```{r}
 #Read the files
@@ -50,7 +49,7 @@ str(snp_position) # describes the variables data types
 
 ```
 
-#Filter files for maize, teosinte
+\#Filter files for maize, teosinte
 
 ```{r}
 #filter maize records
@@ -60,7 +59,8 @@ maize <- filter(genotypes, Group == 'ZMMIL' | Group =='ZMMLR' | Group == 'ZMMMR'
 teosinte <- filter(genotypes, Group == 'ZMPBA' | Group =='ZMPIL' | Group == 'ZMPJA')
 ```
 
-#Transpose the data for maize
+\#Transpose the data for maize
+
 ```{r}
 
 #maize
@@ -80,7 +80,9 @@ maize_data <- merge(snp_position, maize_transposed, by = "SNP_ID")
 maize_data <- select(maize_data, SNP_ID, Chromosome, Position, everything())
 
 ```
-#Transpose the data for teosinte
+
+\#Transpose the data for teosinte
+
 ```{r}
 #teosinte
 teosinte_transposed <- t(teosinte) #transpose 
@@ -99,14 +101,14 @@ teosinte_data <- merge(snp_position, teosinte_transposed, by = "SNP_ID")
 teosinte_data <- select(teosinte_data, SNP_ID, Chromosome, Position, everything())
 ```
 
-#Data processing
+\#Data processing
 
-#maize output 
+\#maize output
+
 ```{r}
 #Checks if directory exists before it creates it
 if(!dir.exists("maize_results")){dir.create("./maize_results")}
 ```
-
 
 ```{r}
 #Question (a)
@@ -132,7 +134,8 @@ for (i in 1:length(unique(maize_chr_b$Chromosome))){
 }
 ```
 
-#Teosinte output
+\#Teosinte output
+
 ```{r,echo=FALSE }
 if(!dir.exists("teosinte_results")){dir.create("./teosinte_results")}
 ```
@@ -148,6 +151,7 @@ for (i in 1:length(unique(teosinte_chr$Chromosome))){
   write.table(chrm, file = paste("./teosinte_results/teo_a",i, sep="_"))
 }
 ```
+
 ```{r}
 #Question(b)
 #find "?" and replace with "-"
@@ -162,18 +166,20 @@ for (i in 1:length(unique(teo_chr_b$Chromosome))){
 }
 ```
 
-#PartII Visualize
+\#PartII Visualize
 
 ```{r}
 if(!dir.exists("visualize")){dir.create("./visualize")}
 ```
 
-#output for maize figs
+\#output for maize figs
+
 ```{r}
 if(!dir.exists("visualize/maize")){dir.create("./visualize/maize")}
 ```
 
-##Maize graphs
+\#\#Maize graphs
+
 ```{r}
 
 
@@ -230,9 +236,10 @@ ggsave(filename = "./visualize/maize/maize_missing_all.png", width = 14, height 
 
 ```
 
-##Teosinte_graphs
+\#\#Teosinte_graphs
 
-#output for teosinte figs
+\#output for teosinte figs
+
 ```{r}
 if(!dir.exists("visualize/teosinte")){dir.create("./visualize/teosinte")}
 ```
@@ -289,5 +296,3 @@ t7 <- ggplot(teo_y, mapping=aes(x=status, fill=Chromosome)) + geom_bar() + labs(
 ggsave(filename = "./visualize/teosinte/teo_missing_all.png", width = 14, height = 14 )
 
 ```
-
-

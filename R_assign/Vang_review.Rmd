@@ -1,0 +1,63 @@
+---
+title: "Vang_review.Rmd"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Vang Review for Chiteri
+
+Part 1 Comments:
+
+-   Data inspection: Looks good so far. The only thing I saw was that you have a couple of "\#" in front of the `str()` and `colnames()` codes. Unsure if these were supposed to be muted, but it can be easily removed if you want to code to still run:
+
+    ```{r}
+    dim(genotypes) #No of rows & columns
+    class(genotypes)
+
+    #str(genotypes) # describes the variables data types. Since we have many variables we don't output them
+
+    file.info(list.files(path = ".", pattern=".txt", full.names = TRUE))
+    #colnames(genotypes) # will print all the 986 variables
+
+    ##Snp_position
+    dim(snp_position) #No of rows & columns
+    class(snp_position)
+    str(snp_position) # describes the variables data types
+
+    #colnames(snp_position)
+    ```
+
+-   Data processing: Maize and teosinte data were split, transposed, filtered, and joined correctly using `merge()`. "?/?" values were replaced as accordingly to each file. I checked the files for increasing and decreasing position values and all are correct.
+
+Part 2 Comments:
+
+-   I noticed that for all of your plots, you labeled each to a specific a variable or dataset. For example, in this code below, you labeled your ggplot to a variable "m1." Is there a reason why you do this?
+
+    Removing this, the ggplot actually computes an image output in the "plots" viewer on the right side of the application, which might be useful for you (and others) in case you would like to view the plot to make sure it looks correct before moving forward to "saving" it. I hope this makes sense!
+
+    ```{r}
+    #bar_graph
+    m1 <- ggplot(maize_chr, mapping=aes(x=Chromosome, fill=Chromosome)) + geom_bar() + labs(title="Maize: Total SNPs per Chromosome", y="Total SNPs") + theme(plot.title = element_text(hjust = 0.5))
+
+    ```
+
+-   For your heterozygosity plots, it seems like you are only plotting heterozygosity on one sample across all chromosomes (ex: maize sample: ZDP_0752a) (ex: teosinte sample: S0881).
+
+    I think you were supposed to graph all maize/teosinte samples - not just the one. You may need to use `pivot_longer()` or `melt()` in order to reorganize your data as suggested in the assignment before you plot heterozygosity across all Sample_IDs.
+
+    ```{r}
+    maize_y <- mutate(maize_chr, status = (ZDP_0752a == 'A/A' | ZDP_0752a == 'C/C' | ZDP_0752a == 'G/G'  | ZDP_0752a == 'T/T'  ))
+
+    teo_y <- mutate(teosinte_chr, status = (S0881 == 'A/A' | S0881 == 'C/C' | S0881 == 'G/G'  | S0881 == 'T/T'  ))
+    ```
+
+-   It also looks like you didn't make a similar plot that graphs heterzygosity by **Group_ID.** Your `maize_y` and `teo_y` dataframes do not seem to have a column for Group_ID. You might need to add that column back into your dataframe before plotting for heterozygosity.
+
+-   Also, for all of your heterozygosity plots, you might want to indicate what you mean by "true" and "false." In other words, you might want to rename your x-axis labels by "homozygous" and "heterozygous.
+
+-   Another thing - I wasn't sure which plot is the one you created with one other feature of the dataset... you might want to indicate which plot that is.
+
+Otherwise, everything else looks good. Great job!
