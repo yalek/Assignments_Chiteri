@@ -192,7 +192,8 @@ m1 <- ggplot(maize_chr, mapping=aes(x=Chromosome, fill=Chromosome)) + geom_bar()
 ggsave(filename = "./visualize/maize/maize_snps_per_chromosome.png")
 
 #Snp distribution
-m2 <- ggplot(maize_chr, mapping=aes(x=Chromosome, color=Chromosome)) + geom_density() + labs(title="Maize: Distribution of total SNPs per Chromosome") + theme(plot.title = element_text(hjust = 0.5))
+
+m2 <- ggplot(maize_chr, mapping=aes(x=Position, color=Chromosome)) + geom_density() + labs(title="Maize: Distribution of total SNPs per Chromosome") + theme(plot.title = element_text(hjust = 0.5))
 
 #save
 ggsave(filename = "./visualize/maize/maize_sns_distribution_per_chromosome.png")
@@ -214,7 +215,7 @@ m5 <- ggplot(maize_y, mapping=aes(x=status, fill=Chromosome)) + geom_bar() + lab
 #save
 ggsave(filename = "./visualize/maize/maize_homo_hetero_all_chromosomes.png", width = 14, height = 14)
 
-#missing data
+#missing data   
 
 maize_y <- mutate(maize_chr, status = (ZDP_0752a == '?/?'))
 

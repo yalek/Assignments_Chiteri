@@ -1,0 +1,8 @@
+Notes on Chiteri's R assignment
+
+1. In graph m2, you're calling by chromosome then labeling by chromosome so the graph is confusing because lines are non zero on other chromosome. 
+Might want to change x to be = to Position, I couldn't get your script to work with it but I used;
+
+maize_all_density <- ggplot(maize_merge) + geom_density(aes(x=Position, color = Chromosome)) +  theme_minimal() 
+
+2. I am also reviewing another script where they're calling the Groups (ZMMIL/ZMPBA etc) to create the graphs asked for in the missing data and heterozygosity part of the assignment, which is interesting and something to think about. 
