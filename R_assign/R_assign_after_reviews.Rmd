@@ -1,0 +1,328 @@
+---
+title: "R_assign_after_reviews"
+author: "chiteri"
+date: "3/22/2021"
+output: html_document
+---
+#This was submitted after making changes from the reviewers
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+\#\#set working directory (uses relative path)
+
+```{r}
+setwd('.') #uses current directory with markdown file as working directory
+
+```
+
+```{r, include=FALSE}
+# install tidyverse if not installed
+#will not be included in markdown
+
+if(!require(tidyverse))
+  install.packages("tidyverse");
+suppressPackageStartupMessages(library(tidyverse))
+```
+
+\#Part1 Data inspection
+
+```{r}
+#Read the files
+genotypes <- read.table("./fang_et_al_genotypes.txt",header = TRUE, sep = "\t")
+snp_position <- read.table("./snp_position.txt", header = TRUE, sep = "\t")
+
+#Inspecting the genotypes file
+dim(genotypes) #No of rows & columns
+class(genotypes)
+#str(genotypes) # describes the variables data types. Since we have many variables we don't output them
+
+file.info(list.files(path = ".", pattern=".txt", full.names = TRUE))
+#colnames(genotypes) # will print all the 986 variables
+
+##Snp_position
+dim(snp_position) #No of rows & columns
+class(snp_position)
+str(snp_position) # describes the variables data types
+
+#colnames(snp_position)
+
+```
+
+#Maize and teosinte data were split, transposed, filtered, and joined correctly using `merge()`. "?/?" values were replaced as accordingly to each file. I checked the files for increasing and decreasing position values and all are correct.
+
+\#Filter files for maize, teosinte
+
+```{r}
+#filter maize records
+maize <- filter(genotypes, Group == 'ZMMIL' | Group =='ZMMLR' | Group == 'ZMMMR')
+
+#filter teosinte records
+teosinte <- filter(genotypes, Group == 'ZMPBA' | Group =='ZMPIL' | Group == 'ZMPJA')
+```
+
+\#Transpose the data for maize
+
+```{r}
+
+#maize
+maize_transposed <- t(maize) # transpose
+colnames(maize_transposed) <- maize[,1] # assign column names using the first column before transposing
+
+maize_transposed <- maize_transposed[4:nrow(maize_transposed),]#remove first 3 rows
+
+#rename the rownames column to SNP_ID
+maize_transposed <- dplyr::as_data_frame(maize_transposed, rownames = "SNP_ID")
+
+#join the snp_position and transposed maize genotypes
+
+maize_data <- merge(snp_position, maize_transposed, by = "SNP_ID")
+
+#reorganize the columns
+maize_data <- select(maize_data, SNP_ID, Chromosome, Position, everything())
+
+```
+
+\#Transpose the data for teosinte
+
+```{r}
+#teosinte
+teosinte_transposed <- t(teosinte) #transpose 
+
+colnames(teosinte_transposed) <- teosinte[,1] #rename the variables
+
+teosinte_transposed <- teosinte_transposed[4:nrow(maize_transposed),] #exclude first 3 rows
+
+teosinte_transposed <- dplyr::as_data_frame(teosinte_transposed, rownames = "SNP_ID") #rename rownames
+
+#join the snp_position and transposed teosinte genotypes
+
+teosinte_data <- merge(snp_position, teosinte_transposed, by = "SNP_ID")
+
+#reorganize the columns
+teosinte_data <- select(teosinte_data, SNP_ID, Chromosome, Position, everything())
+```
+
+\#Data processing
+
+
+
+\#maize output
+
+```{r}
+#Checks if directory exists before it creates it
+if(!dir.exists("maize_results")){dir.create("./maize_results")}
+```
+
+```{r}
+#Question (a)
+#create a dataframe without unknown & multiple in chromosome column
+maize_chr <- filter(maize_data, Chromosome != "unknown" & Chromosome != "multiple")
+
+#create the required files per chromosome. Position in ascending order
+for (i in 1:length(unique(maize_chr$Chromosome))){
+  chrm <-  maize_chr %>% filter(Chromosome == i) %>% arrange(Position)
+  write.table(chrm, file = paste("./maize_results/maize_a",i, sep="_"))
+}
+
+
+# Question (b)
+#find "?" and replace "-", arrange Position in descending order
+chr1_b <- as_tibble(lapply(maize_data, gsub, pattern="?", replacement="-", fixed=TRUE))
+
+maize_chr_b <- filter(chr1_b, Chromosome != 'unknown' & Chromosome != 'multiple')
+
+for (i in 1:length(unique(maize_chr_b$Chromosome))){
+  chrm_b <-  maize_chr_b %>% filter(Chromosome == i) %>% arrange(desc(Position))
+  write.table(chrm_b, file = paste("./maize_results/maize_b",i, sep="_"))
+}
+```
+
+\#Teosinte output
+
+```{r,echo=FALSE }
+if(!dir.exists("teosinte_results")){dir.create("./teosinte_results")}
+```
+
+```{r}
+#Question(a)
+#exclude unknown & multiple
+teosinte_chr <- filter(teosinte_data, Chromosome != 'unknown' & Chromosome != 'multiple')
+
+#create the required files, Position in ascending order
+for (i in 1:length(unique(teosinte_chr$Chromosome))){
+  chrm <-  teosinte_chr %>% filter(Chromosome == i) %>% arrange(Position)
+  write.table(chrm, file = paste("./teosinte_results/teo_a",i, sep="_"))
+}
+```
+
+```{r}
+#Question(b)
+#find "?" and replace with "-"
+teosinte_b <- as_tibble(lapply(teosinte_data, gsub, pattern="?", replacement="-", fixed=TRUE))
+
+teo_chr_b <- filter(teosinte_b, Chromosome != 'unknown' & Chromosome != 'multiple')
+
+#create required files with Position in descending order
+for (i in 1:length(unique(teo_chr_b$Chromosome))){
+  chrm_b <-  teo_chr_b %>% filter(Chromosome == i) %>% arrange(desc(Position))
+  write.table(chrm_b, file = paste("./teosinte_results/teo_b",i, sep="_"))
+}
+```
+
+\#PartII Visualize
+
+#General figures
+```{r}
+#Clean up using tidy
+#filter only maize and teosinte
+y <- pivot_longer(genotypes, cols = -c(1:3)) %>% filter(Group %in% c('ZMMIL','ZMMLR', 'ZMMMR', 'ZMPBA', 'ZMPIL','ZMPJA' ))
+
+#create a variable
+y$ishomozygous <- y$value=='A/A' | y$value=='T/T' | y$value=='C/C' | y$value=='G/G' 
+
+ type <- mutate(y, type=ifelse(Group %in% c("ZMMIL","ZMMLR", "ZMMMR"),"maize","teosinte"
+))
+
+ #Confirm the category you have in type
+unique(type$type)
+
+#Plot homozygozity
+ggplot(type, mapping = aes(x=Group, fill = ishomozygous, color=type)) + geom_bar() + ggtitle('Homozygozity status') + theme(plot.title = element_text(hjust = 0.5))
+
+ggsave('homozygozity.png', width = 10, height = 10)
+
+#multiple panels
+ggplot(type, mapping = aes(x=Group, fill = ishomozygous)) + geom_bar() + facet_wrap(~type)+  ggtitle('Homozygozity status') + theme(plot.title = element_text(hjust = 0.5))
+
+ggsave('Separate_groups.png', width = 10, height = 10)
+
+```
+
+```{r}
+if(!dir.exists("visualize")){dir.create("./visualize")}
+```
+
+##Visualize for each crop
+\#output for maize figs
+
+```{r}
+if(!dir.exists("visualize/maize")){dir.create("./visualize/maize")}
+```
+
+\#\#Maize graphs
+
+```{r}
+
+#Maize
+
+#make chromosome a factor
+
+maize_chr$Chromosome <- factor(maize_chr$Chromosome, levels = c(1,2,3,4,5,6,7,8,9,10))
+
+#bar_graph
+ggplot(maize_chr, mapping=aes(x=Chromosome, fill=Chromosome)) + geom_bar() + labs(title="Maize: Total SNPs per Chromosome", y="Total SNPs") + theme(plot.title = element_text(hjust = 0.5))
+
+#save
+ggsave(filename = "./visualize/maize/maize_snps_per_chromosome.png")
+
+#Snp distribution
+ggplot(maize_chr, mapping=aes(x=Chromosome, color=Chromosome)) + geom_density() + labs(title="Maize: Distribution of total SNPs per Chromosome") + theme(plot.title = element_text(hjust = 0.5))
+
+#save
+ggsave(filename = "./visualize/maize/maize_sns_distribution_per_chromosome.png")
+
+ggplot(data=maize_chr) + geom_point(mapping=aes(x=Chromosome, y= SNP_ID, color=Chromosome)) + theme(axis.text.y = element_blank())+ labs(title="Maize: Distribution of SNPs per Chromosome")+ theme(plot.title = element_text(hjust = 0.5)) + ylab('SNP')
+
+#save
+ggsave(filename = "./visualize/maize/maize_sns_distribution_per_chromosome2.png")
+
+##Missing data& heterozygosity
+maize_y <- mutate(maize_chr, status = (ZDP_0752a == 'A/A' | ZDP_0752a == 'C/C' | ZDP_0752a == 'G/G'  | ZDP_0752a == 'T/T'  ))
+
+ggplot(maize_y, mapping=aes(x=status, fill=Chromosome)) + geom_bar() + labs(title="Maize: Homozygosity|Heterozygosity Status") + theme(plot.title = element_text(hjust = 0.5))
+
+#save
+ggsave(filename = "./visualize/maize/maize_homo_hetero.png")
+
+ggplot(maize_y, mapping=aes(x=status, fill=Chromosome)) + geom_bar() + labs(title="Maize: Homozygosity|Heterozygosity Status") + theme(plot.title = element_text(hjust = 0.5)) + facet_grid(~Chromosome)
+#save
+ggsave(filename = "./visualize/maize/maize_homo_hetero_all_chromosomes.png", width = 14, height = 14)
+
+#missing data
+
+maize_y <- mutate(maize_chr, status = (ZDP_0752a == '?/?'))
+
+ggplot(maize_y, mapping=aes(x=status, fill=Chromosome )) + geom_bar() + labs(title="Maize: Missing data for ZDP_0752a") + theme(plot.title = element_text(hjust = 0.5))
+
+#save
+ggsave(filename = "./visualize/maize/maize_missing.png")
+
+ggplot(maize_y, mapping=aes(x=status, fill=Chromosome)) + geom_bar() + labs(title="Maize: Missing data for ZDP_0752a") + theme(plot.title = element_text(hjust = 0.5)) + facet_grid(~Chromosome) 
+
+#save
+ggsave(filename = "./visualize/maize/maize_missing_all.png", width = 14, height = 14 )
+
+```
+
+\#\#Teosinte_graphs
+
+\#output for teosinte figs
+
+```{r}
+if(!dir.exists("visualize/teosinte")){dir.create("./visualize/teosinte")}
+```
+
+```{r}
+##Visualize for each crop
+#Maize
+
+#make chromosome a factor
+
+teosinte_chr$Chromosome <- factor(teosinte_chr$Chromosome, levels = c(1,2,3,4,5,6,7,8,9,10))
+
+#bar_graph
+ggplot(teosinte_chr, mapping=aes(x=Chromosome, fill=Chromosome)) + geom_bar() + labs(title="Teosinte: Total SNPs per Chromosome", y="Total SNPs") + theme(plot.title = element_text(hjust = 0.5))
+
+#save
+ggsave(filename = "./visualize/teosinte/teo_snps_per_chromosome.png")
+
+#Snp distribution
+ggplot(teosinte_chr, mapping=aes(x=Chromosome, color=Chromosome)) + geom_density() + labs(title="Teosinte: Distribution of total SNPs per Chromosome") + theme(plot.title = element_text(hjust = 0.5))
+
+#save
+ggsave(filename = "./visualize/teosinte/teo_sns_distribution_per_chromosome.png")
+
+ggplot(data=teosinte_chr) + geom_point(mapping=aes(x=Chromosome, y= SNP_ID, color=Chromosome)) + theme(axis.text.y = element_blank())+ labs(title="Teosinte: Distribution of SNPs per Chromosome")+ theme(plot.title = element_text(hjust = 0.5)) + ylab('SNP')
+
+#save
+ggsave(filename = "./visualize/teosinte/teo_sns_distribution_per_chromosome2.png")
+
+##Missing data& heterozygosity
+teo_y <- mutate(teosinte_chr, status = (S0881 == 'A/A' | S0881 == 'C/C' | S0881 == 'G/G'  | S0881 == 'T/T'  ))
+
+ggplot(teo_y, mapping=aes(x=status, fill=Chromosome)) + geom_bar() + labs(title="Teosinte: Homozygosity|Heterozygosity Status") + theme(plot.title = element_text(hjust = 0.5))
+
+#save
+ggsave(filename = "./visualize/teosinte/teo_homo_hetero.png")
+
+ggplot(teo_y, mapping=aes(x=status, fill=Chromosome)) + geom_bar() + labs(title="Teosinte: Homozygosity|Heterozygosity Status") + theme(plot.title = element_text(hjust = 0.5)) + facet_grid(~Chromosome)
+#save
+ggsave(filename = "./visualize/teosinte/teo_homo_hetero_all_chromosomes.png", width = 14, height = 14)
+
+#missing data
+
+teo_y <- mutate(teosinte_chr, status = (S0881 == '?/?'))
+
+ggplot(teo_y, mapping=aes(x=status, fill=Chromosome )) + geom_bar() + labs(title="Teosinte: Missing data for S0881") + theme(plot.title = element_text(hjust = 0.5))
+
+#save
+ggsave(filename = "./visualize/teosinte/teo_missing.png")
+
+ggplot(teo_y, mapping=aes(x=status, fill=Chromosome)) + geom_bar() + labs(title="Teosinte: Missing data for S0881") + theme(plot.title = element_text(hjust = 0.5)) + facet_grid(~Chromosome) 
+
+#save
+ggsave(filename = "./visualize/teosinte/teo_missing_all.png", width = 14, height = 14 )
+
+```
