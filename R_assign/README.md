@@ -7,7 +7,12 @@
 5. snp_position - a file containing snp positions
 6. R_assign.rmd - R markdown script for processing
 7. R_assign.html - contains output from processing
-8. README.md - Contains the instructions you are reading
+8. R_assign_after_reviews.rmd - update
+9. R_assign_after_reviews.html - update
+10. homozygozity.png - fig of status of homozygozity
+11. Separate_groups.png - homozygozity by group (maize/teosinte)
+12. Van_review _ reviews from Vang
+13. README.md - Contains the instructions you are reading
 
 
 ##To replicate these results, you only need the following files in the same directory:-
